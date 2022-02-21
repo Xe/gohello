@@ -57,5 +57,11 @@
         type = "app";
         program = "${self.packages.${system}.go-hello}/bin/go-hello";
       });
+
+      devShell = forAllSystems (system:
+        let pkgs = nixpkgsFor.${system};
+        in pkgs.mkShell {
+          buildInputs = with pkgs; [ go gopls goimports go-tools ];
+        });
     };
 }
