@@ -2,9 +2,14 @@
   description = "A simple Go package";
 
   # Nixpkgs / NixOS version to use.
-  inputs.nixpkgs.url = "nixpkgs/nixos-21.11";
+  inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
 
-  outputs = { self, nixpkgs }:
+  inputs.flake-compat = {
+    url = "github:edolstra/flake-compat";
+    flake = false;
+  };
+
+  outputs = { self, nixpkgs, ... }:
     let
 
       # Generate a user-friendly version number.
