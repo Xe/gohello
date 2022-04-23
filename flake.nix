@@ -30,7 +30,7 @@
       # Provide some binary packages for selected system types.
       packages = forAllSystems (system:
         let pkgs = nixpkgsFor.${system};
-        in {
+        in rec {
           go-hello = pkgs.buildGoModule {
             pname = "go-hello";
             inherit version;
@@ -51,22 +51,32 @@
             vendorSha256 =
               "sha256-pQpattmS9VmO3ZIQUFn66az8GSmB4IvYhTTCFn6SUmo=";
           };
+          default = go-hello;
         });
+
+      apps = forAllSystems (system: rec {
+        go-hello = {
+          type = "app";
+          program = "${self.packages.${system}.go-hello}/bin/go-hello";
+        };
+        default = go-hello;
+      });
 
       # The default package for 'nix build'. This makes sense if the
       # flake provides only one package or there is a clear "main"
       # package.
-      defaultPackage = forAllSystems (system: self.packages.${system}.go-hello);
+      defaultPackage = forAllSystems (system: self.packages.${system}.default);
 
-      defaultApp = forAllSystems (system: {
-        type = "app";
-        program = "${self.packages.${system}.go-hello}/bin/go-hello";
+      defaultApp = forAllSystems (system: self.apps.${system}.default);
+
+      devShells = forAllSystems (system:
+        let pkgs = nixpkgsFor.${system};
+        in {
+          default = pkgs.mkShell {
+            buildInputs = with pkgs; [ go gopls goimports go-tools ];
+          };
       });
 
-      devShell = forAllSystems (system:
-        let pkgs = nixpkgsFor.${system};
-        in pkgs.mkShell {
-          buildInputs = with pkgs; [ go gopls goimports go-tools ];
-        });
+      devShell = forAllSystems (system: self.devShells.${system}.default);
     };
 }
